@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>StreamFlix</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#fff;font-family:'Segoe UI',sans-serif;min-height:100vh}
+:root{--red:#e50914;--gold:#f5c518}
+nav{position:sticky;top:0;z-index:100;background:rgba(10,10,15,.97);backdrop-filter:blur(10px);padding:10px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid rgba(255,255,255,.07)}
+.logo{font-size:22px;font-weight:800;color:var(--red);cursor:pointer;flex-shrink:0;letter-spacing:-1px}
+.nav-tabs{display:flex;gap:3px;flex:1}
+.nav-tab{background:none;border:none;color:#888;padding:7px 14px;border-radius:18px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s;white-space:nowrap}
+.nav-tab.active{background:var(--red);color:#fff}
+.nav-tab:hover:not(.active){background:rgba(255,255,255,.09);color:#fff}
+.search-wrap{position:relative;flex-shrink:0}
+.search-wrap input{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);border-radius:18px;color:#fff;padding:8px 34px 8px 14px;font-size:13px;width:190px;outline:none;transition:all .25s}
+.search-wrap input:focus{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.28);width:240px}
+.search-wrap input::placeholder{color:#555}
+.s-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#555;font-size:14px;pointer-events:none}
+.hero{position:relative;height:400px;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:#111}
+.hero-img{width:100%;height:100%;object-fit:cover;opacity:.38}
+.hero-grad{position:absolute;inset:0;background:linear-gradient(0deg,#0a0a0f 0%,rgba(10,10,15,.15) 55%,rgba(10,10,15,.55) 100%)}
+.hero-content{position:absolute;bottom:44px;left:24px;right:24px;max-width:500px}
+.hero-badge{display:inline-block;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:3px;margin-bottom:9px;letter-spacing:.6px}
+.hero-title{font-size:30px;font-weight:800;line-height:1.1;margin-bottom:7px;text-shadow:0 2px 10px rgba(0,0,0,.7)}
+.hero-desc{font-size:13px;color:#ccc;line-height:1.55;margin-bottom:15px;max-width:400px}
+.hero-btns{display:flex;gap:9px}
+.btn-play{background:var(--red);color:#fff;border:none;padding:10px 22px;border-radius:5px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-play:hover{background:#c00;transform:scale(1.03)}
+.btn-fav-hero{background:rgba(255,255,255,.13);color:#fff;border:1px solid rgba(255,255,255,.22);padding:10px 18px;border-radius:5px;font-size:13px;cursor:pointer;transition:all .2s}
+.btn-fav-hero:hover{background:rgba(255,255,255,.22)}
+.sections{padding:6px 18px 50px}
+.section{margin-bottom:26px}
+.sec-title{font-size:15px;font-weight:700;margin-bottom:11px;color:#fff}
+.sec-title span{color:var(--red)}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.card{position:relative;border-radius:7px;overflow:hidden;aspect-ratio:2/3;cursor:pointer;background:#1a1a2e;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:scale(1.06);box-shadow:0 8px 32px rgba(0,0,0,.75);z-index:2}
+.card img{width:100%;height:100%;object-fit:cover;display:block}
+.card-ov{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.88) 0%,transparent 55%)}
+.card-info{position:absolute;bottom:0;left:0;right:0;padding:9px 8px 7px}
+.card-title{font-size:10.5px;font-weight:600;line-height:1.2;margin-bottom:3px}
+.card-meta{font-size:9.5px;color:#999;display:flex;gap:4px;align-items:center}
+.card-rating{color:var(--gold);font-weight:700}
+.card-fav{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.6);border:none;color:#aaa;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.card-fav.on{color:#e50914}
+.card-fav:hover{background:rgba(0,0,0,.85);transform:scale(1.15)}
+.player-ov{position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column}
+.player-ov.hidden{display:none}
+.player-head{padding:11px 16px;display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.75);flex-shrink:0}
+.back-btn{background:rgba(255,255,255,.1);border:none;color:#fff;padding:8px 16px;border-radius:5px;cursor:pointer;font-size:13px;font-weight:500}
+.back-btn:hover{background:rgba(255,255,255,.22)}
+.p-title{font-size:16px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.p-ctrl{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.p-sel{background:#1a1a2e;border:1px solid rgba(255,255,255,.22);color:#fff;padding:6px 10px;border-radius:5px;font-size:13px;cursor:pointer;outline:none}
+.p-frame{flex:1;position:relative;min-height:0}
+.p-frame iframe{width:100%;height:100%;border:none}
+.src-bar{padding:8px 16px;background:rgba(0,0,0,.65);display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0}
+.src-label{font-size:11px;color:#555;font-weight:600;margin-right:2px}
+.src-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#888;padding:4px 11px;border-radius:4px;cursor:pointer;font-size:11px;transition:all .15s;white-space:nowrap}
+.src-btn.on{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}
+.src-btn:hover:not(.on){background:rgba(255,255,255,.14);color:#fff}
+.src-divider{width:1px;height:16px;background:rgba(255,255,255,.12);margin:0 4px;align-self:center}
+.spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,.08);border-top-color:var(--red);border-radius:50%;animation:spin .75s linear infinite;margin:60px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-wrap{text-align:center;padding-top:12px;color:#555;font-size:13px}
+.empty{text-align:center;padding:60px 20px;color:#333}
+.empty big{font-size:42px;display:block;margin-bottom:12px}
+.empty p{font-size:14px;line-height:1.6}
+.search-res{padding:14px 18px}
+.search-h{font-size:17px;font-weight:700;margin-bottom:16px}
+.search-h em{color:var(--red);font-style:normal}
+.no-res{text-align:center;padding:50px;color:#444;font-size:14px}
+.fav-c{background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:9px;margin-left:3px;vertical-align:middle}
+@media(max-width:640px){.grid{grid-template-columns:repeat(3,1fr)}.hero{height:300px}.hero-title{font-size:20px}.nav-tabs{gap:2px}.nav-tab{padding:5px 9px;font-size:11px}.search-wrap input{width:110px}.search-wrap input:focus{width:150px}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo" onclick="goHome()">StreamFlix</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('inicio',this)">Inicio</button>
+    <button class="nav-tab" onclick="switchTab('peliculas',this)">Películas</button>
+    <button class="nav-tab" onclick="switchTab('series',this)">Series</button>
+    <button class="nav-tab" onclick="switchTab('anime',this)">Anime</button>
+    <button class="nav-tab" onclick="switchTab('favoritos',this)">♥ Favs <span class="fav-c" id="fc">0</span></button>
+  </div>
+  <div class="search-wrap">
+    <input id="si" type="text" placeholder="Buscar..." oninput="doSearch(this.value)"/>
+    <span class="s-icon">🔍</span>
+  </div>
+</nav>
+
+<div id="mc"></div>
+
+<div class="player-ov hidden" id="pov">
+  <div class="player-head">
+    <button class="back-btn" onclick="closeP()">← Volver</button>
+    <div class="p-title" id="pt">—</div>
+    <div class="p-ctrl" id="pc"></div>
+  </div>
+  <div class="p-frame">
+    <iframe id="pif" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
+  </div>
+  <div class="src-bar" id="src-bar">
+    <!-- filled by JS -->
+  </div>
+</div>
+
+<script>
+const KEY = 'af7b5da2242ff6a50cc935afb91dcd87';
+const B = 'https://api.themoviedb.org/3';
+const I = 'https://image.tmdb.org/t/p/w300';
+const IL = 'https://image.tmdb.org/t/p/w780';
+const LG = 'es-MX';
+const PH = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgZmlsbD0iIzFhMWEyZSIvPjx0ZXh0IHg9IjE1MCIgeT0iMjI1IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzQ0NCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+U2luIGltYWdlbjwvdGV4dD48L3N2Zz4=';
+
+// =============================================
+// FUENTES DE REPRODUCCIÓN POR TIPO
+// =============================================
+const SOURCES = {
+  movie: [
+    { name: 'VidSrc',     fn: (id)        => `https://vidsrc.fyi/embed/movie/${id}` },
+    { name: 'VidSrc.cc',  fn: (id)        => `https://vidsrc.cc/v2/embed/movie/${id}` },
+    { name: 'VidSrc.me',  fn: (id)        => `https://vidsrc-embed.ru/embed/movie?tmdb=${id}` },
+    { name: 'Streamix',   fn: (id)        => `https://stream-vault-two-phi.vercel.app/embed/movie/${id}` },
+    { name: '2Embed',     fn: (id)        => `https://www.2embed.cc/embed/${id}` },
+  ],
+  tv: [
+    { name: 'VidSrc',     fn: (id,s,e)    => `https://vidsrc.fyi/embed/tv/${id}/${s}/${e}` },
+    { name: 'VidSrc.cc',  fn: (id,s,e)    => `https://vidsrc.cc/v2/embed/tv/${id}?season=${s}&episode=${e}` },
+    { name: 'VidSrc.me',  fn: (id,s,e)    => `https://vidsrc-embed.ru/embed/tv?tmdb=${id}&season=${s}&episode=${e}` },
+    { name: 'Streamix',   fn: (id,s,e)    => `https://stream-vault-two-phi.vercel.app/embed/tv/${id}?season=${s}&episode=${e}` },
+    { name: '2Embed',     fn: (id,s,e)    => `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}` },
+  ],
+  anime: [
+    { name: 'VidSrc Anime', fn: (id,s,e)  => `https://vidsrc.cc/v2/embed/anime/${id}/${e}/sub` },
+    { name: 'VidSrc TV',    fn: (id,s,e)  => `https://vidsrc.fyi/embed/tv/${id}/${s}/${e}` },
+    { name: 'VidSrc.me',    fn: (id,s,e)  => `https://vidsrc-embed.ru/embed/tv?tmdb=${id}&season=${s}&episode=${e}` },
+    { name: 'Streamix',     fn: (id,s,e)  => `https://stream-vault-two-phi.vercel.app/embed/tv/${id}?season=${s}&episode=${e}` },
+    { name: '2Embed',       fn: (id,s,e)  => `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}` },
+  ]
+};
+
+let curTab='inicio', curItem=null, curS=1, curE=1, totS=1, totE=1;
+let curMediaType='movie', curSourceIdx=0, isAnime=false;
+let favs=[];
+try{favs=JSON.parse(localStorage.getItem('sfx_favs')||'[]')}catch(e){}
+let stimer=null;
+const itemCache={};
+
+function saveFavs(){try{localStorage.setItem('sfx_favs',JSON.stringify(favs))}catch(e){}}
+function updFC(){document.getElementById('fc').textContent=favs.length}
+updFC();
+
+async function req(path){
+  const r=await fetch(`${B}${path}${path.includes('?')?'&':'?'}api_key=${KEY}&language=${LG}`);
+  if(!r.ok)throw new Error(r.status);
+  return r.json();
+}
+
+function imgUrl(p,lg){return p?(lg?IL:I)+p:PH}
+function isFav(id){return favs.some(f=>f.id===id)}
+function cacheItems(items){items.forEach(i=>{itemCache[i.id]=i})}
+
+function toggleFav(item,btn){
+  if(isFav(item.id)){
+    favs=favs.filter(f=>f.id!==item.id);
+    if(btn){btn.textContent='♡';btn.classList.remove('on')}
+  }else{
+    favs.push(item);
+    if(btn){btn.textContent='♥';btn.classList.add('on')}
+  }
+  saveFavs();updFC();
+  if(curTab==='favoritos')renderFavs();
+}
+function handleFav(id,btn){const item=itemCache[id];if(item)toggleFav(item,btn)}
+
+function card(item){
+  const f=isFav(item.id);
+  const t=item.title||item.name||'Sin título';
+  const y=(item.release_date||item.first_air_date||'').slice(0,4);
+  const r=item.vote_average?item.vote_average.toFixed(1):'';
+  const mt=item.media_type||(item.title?'movie':'tv');
+  return `<div class="card" onclick='openP(${item.id})'>
+    <img src="${imgUrl(item.poster_path)}" loading="lazy" onerror="this.src='${PH}'"/>
+    <div class="card-ov"></div>
+    <div class="card-info">
+      <div class="card-title">${t}</div>
+      <div class="card-meta">${r?`<span class="card-rating">★${r}</span>`:''} ${y?`<span>${y}</span>`:''} ${mt==='tv'?'<span>Serie</span>':''}</div>
+    </div>
+    <button class="card-fav ${f?'on':''}" onclick="event.stopPropagation();handleFav(${item.id},this)">${f?'♥':'♡'}</button>
+  </div>`;
+}
+
+function sec(title,items){
+  if(!items||!items.length)return'';
+  cacheItems(items);
+  return `<div class="section">
+    <div class="sec-title">${title}</div>
+    <div class="grid">${items.slice(0,10).map(card).join('')}</div>
+  </div>`;
+}
+
+function showError(msg){document.getElementById('mc').innerHTML=`<div class="empty"><big>⚠️</big><p>${msg}</p></div>`}
+
+function buildSourceBar(mt){
+  const sources=SOURCES[mt]||SOURCES.movie;
+  const bar=document.getElementById('src-bar');
+  bar.innerHTML=`<span class="src-label">Fuente:</span>`+
+    sources.map((s,i)=>`<button class="src-btn ${i===curSourceIdx?'on':''}" onclick="setSrc(${i},this,'${mt}')">${s.name}</button>`).join('');
+}
+
+function getUrl(mt,idx){
+  const sources=SOURCES[mt]||SOURCES.movie;
+  const s=sources[idx]||sources[0];
+  if(mt==='movie')return s.fn(curItem.id);
+  return s.fn(curItem.id,curS,curE);
+}
+
+function loadStream(mt){
+  document.getElementById('pif').src=getUrl(mt,curSourceIdx);
+  buildSourceBar(mt);
+}
+
+function setSrc(idx,btn,mt){
+  curSourceIdx=idx;
+  document.querySelectorAll('.src-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('pif').src=getUrl(mt,idx);
+}
+
+// ======== RENDERS ========
+async function renderInicio(){
+  const mc=document.getElementById('mc');
+  mc.innerHTML='<div class="spinner"></div><div class="loading-wrap">Cargando contenido...</div>';
+  try{
+    const [tr,pm,pt,tm,an,np]=await Promise.all([
+      req('/trending/all/week'),req('/movie/popular'),req('/tv/popular'),
+      req('/movie/top_rated'),
+      req('/discover/tv?with_genres=16&with_original_language=ja&sort_by=popularity.desc'),
+      req('/movie/now_playing')
+    ]);
+    const h=tr.results[0];
+    const hy=(h.release_date||h.first_air_date||'').slice(0,4);
+    cacheItems([h]);
+    mc.innerHTML=`
+      <div class="hero">
+        <div class="hero-bg"><img src="${imgUrl(h.backdrop_path,true)}" class="hero-img" onerror="this.style.display='none'"/></div>
+        <div class="hero-grad"></div>
+        <div class="hero-content">
+          <div class="hero-badge">${h.media_type==='movie'?'PELÍCULA':'SERIE'}${hy?' · '+hy:''}</div>
+          <div class="hero-title">${h.title||h.name}</div>
+          <div class="hero-desc">${(h.overview||'Sin descripción.').slice(0,150)}${h.overview&&h.overview.length>150?'...':''}</div>
+          <div class="hero-btns">
+            <button class="btn-play" onclick='openP(${h.id})'>▶ Reproducir</button>
+            <button class="btn-fav-hero" onclick='handleFav(${h.id},this)'>${isFav(h.id)?'♥ Guardado':'♡ Guardar'}</button>
+          </div>
+        </div>
+      </div>
+      <div class="sections">
+        ${sec('🔥 <span>Tendencias</span> de la semana',tr.results.slice(1))}
+        ${sec('🎬 <span>Películas</span> populares',pm.results)}
+        ${sec('📺 <span>Series</span> populares',pt.results)}
+        ${sec('⭐ <span>Mejor valoradas</span>',tm.results)}
+        ${sec('🍥 <span>Anime</span>',an.results)}
+        ${sec('🎥 <span>En cines</span>',np.results)}
+      </div>`;
+  }catch(e){showError('No se pudo cargar. Verificá tu conexión.')}
+}
+
+async function renderPeliculas(){
+  const mc=document.getElementById('mc');mc.innerHTML='<div class="spinner"></div>';
+  try{
+    const [p,t,a,c,h,s]=await Promise.all([
+      req('/movie/popular'),req('/movie/top_rated'),
+      req('/discover/movie?with_genres=28'),req('/discover/movie?with_genres=35'),
+      req('/discover/movie?with_genres=27'),req('/discover/movie?with_genres=878')
+    ]);
+    mc.innerHTML=`<div class="sections" style="padding-top:16px">
+      ${sec('🎬 <span>Populares</span>',p.results)}
+      ${sec('⭐ <span>Mejor valoradas</span>',t.results)}
+      ${sec('💥 <span>Acción</span>',a.results)}
+      ${sec('😂 <span>Comedia</span>',c.results)}
+      ${sec('👻 <span>Terror</span>',h.results)}
+      ${sec('🚀 <span>Ciencia ficción</span>',s.results)}
+    </div>`;
+  }catch(e){showError('Error cargando películas.')}
+}
+
+async function renderSeries(){
+  const mc=document.getElementById('mc');mc.innerHTML='<div class="spinner"></div>';
+  try{
+    const [p,t,d,c,f]=await Promise.all([
+      req('/tv/popular'),req('/tv/top_rated'),
+      req('/discover/tv?with_genres=18'),req('/discover/tv?with_genres=80'),
+      req('/discover/tv?with_genres=10765')
+    ]);
+    mc.innerHTML=`<div class="sections" style="padding-top:16px">
+      ${sec('📺 <span>Populares</span>',p.results)}
+      ${sec('⭐ <span>Mejor valoradas</span>',t.results)}
+      ${sec('🎭 <span>Drama</span>',d.results)}
+      ${sec('🔍 <span>Crimen</span>',c.results)}
+      ${sec('🧙 <span>Fantasía & Sci-Fi</span>',f.results)}
+    </div>`;
+  }catch(e){showError('Error cargando series.')}
+}
+
+async function renderAnime(){
+  const mc=document.getElementById('mc');mc.innerHTML='<div class="spinner"></div>';
+  try{
+    const [p,t,a,r]=await Promise.all([
+      req('/discover/tv?with_genres=16&with_original_language=ja&sort_by=popularity.desc'),
+      req('/discover/tv?with_genres=16&with_original_language=ja&sort_by=vote_average.desc&vote_count.gte=200'),
+      req('/discover/tv?with_genres=16,28&with_original_language=ja'),
+      req('/discover/tv?with_genres=16,10749&with_original_language=ja')
+    ]);
+    mc.innerHTML=`<div class="sections" style="padding-top:16px">
+      ${sec('🍥 <span>Anime</span> popular',p.results)}
+      ${sec('⭐ <span>Mejor valorados</span>',t.results)}
+      ${sec('⚔️ <span>Acción</span>',a.results)}
+      ${sec('💕 <span>Romance</span>',r.results)}
+    </div>`;
+  }catch(e){showError('Error cargando anime.')}
+}
+
+function renderFavs(){
+  const mc=document.getElementById('mc');
+  if(!favs.length){mc.innerHTML=`<div class="empty"><big>♡</big><p>No tenés favoritos aún.<br>Hacé clic en ♡ para guardar.</p></div>`;return}
+  cacheItems(favs);
+  mc.innerHTML=`<div class="sections" style="padding-top:16px">
+    <div class="section">
+      <div class="sec-title">♥ <span>Mis favoritos</span> (${favs.length})</div>
+      <div class="grid">${favs.map(card).join('')}</div>
+    </div>
+  </div>`;
+}
+
+function switchTab(tab,btn){
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  curTab=tab;document.getElementById('si').value='';
+  if(tab==='inicio')renderInicio();
+  else if(tab==='peliculas')renderPeliculas();
+  else if(tab==='series')renderSeries();
+  else if(tab==='anime')renderAnime();
+  else renderFavs();
+}
+
+function goHome(){
+  document.querySelectorAll('.nav-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  curTab='inicio';document.getElementById('si').value='';renderInicio();
+}
+
+function doSearch(q){
+  clearTimeout(stimer);
+  if(!q.trim()){switchTab(curTab,document.querySelector('.nav-tab.active'));return}
+  stimer=setTimeout(async()=>{
+    const mc=document.getElementById('mc');mc.innerHTML='<div class="spinner"></div>';
+    try{
+      const r=await req(`/search/multi?query=${encodeURIComponent(q)}`);
+      const items=r.results.filter(i=>i.media_type!=='person');
+      cacheItems(items);
+      mc.innerHTML=`<div class="search-res">
+        <div class="search-h">Resultados para "<em>${q}</em>"</div>
+        ${items.length?`<div class="grid">${items.map(card).join('')}</div>`:`<div class="no-res">Sin resultados para "${q}"</div>`}
+      </div>`;
+    }catch(e){showError('Error en la búsqueda.')}
+  },400);
+}
+
+async function openP(id){
+  const item=itemCache[id];
+  if(!item)return;
+  curItem=item;
+  curSourceIdx=0;
+  const mt=item.media_type||(item.title?'movie':'tv');
+  curMediaType=mt;
+  // detectar si es anime (género 16 o idioma japonés)
+  isAnime=(item.original_language==='ja'||curTab==='anime');
+
+  document.getElementById('pt').textContent=item.title||item.name;
+  document.getElementById('pov').classList.remove('hidden');
+  document.body.style.overflow='hidden';
+
+  if(mt==='tv'){
+    curS=1;curE=1;
+    try{
+      const det=await req(`/tv/${item.id}`);
+      totS=det.number_of_seasons||1;
+      const ep=await req(`/tv/${item.id}/season/1`);
+      totE=ep.episodes?ep.episodes.length:12;
+    }catch(e){totS=3;totE=12}
+    renderPC();
+  }else{
+    document.getElementById('pc').innerHTML='';
+  }
+  const srcType=isAnime&&mt==='tv'?'anime':mt;
+  loadStream(srcType);
+}
+
+function renderPC(){
+  let so='',eo='';
+  for(let i=1;i<=totS;i++)so+=`<option value="${i}"${i===curS?' selected':''}>Temp. ${i}</option>`;
+  for(let i=1;i<=totE;i++)eo+=`<option value="${i}"${i===curE?' selected':''}>Ep. ${i}</option>`;
+  document.getElementById('pc').innerHTML=`
+    <select class="p-sel" onchange="chgS(this.value)">${so}</select>
+    <select class="p-sel" onchange="chgE(this.value)">${eo}</select>`;
+}
+
+async function chgS(s){
+  curS=parseInt(s);curE=1;
+  try{const ep=await req(`/tv/${curItem.id}/season/${curS}`);totE=ep.episodes?ep.episodes.length:12}catch(e){totE=12}
+  renderPC();
+  const srcType=isAnime?'anime':'tv';
+  loadStream(srcType);
+}
+function chgE(e){
+  curE=parseInt(e);
+  const srcType=isAnime?'anime':'tv';
+  loadStream(srcType);
+}
+
+function closeP(){
+  document.getElementById('pov').classList.add('hidden');
+  document.getElementById('pif').src='';
+  document.body.style.overflow='';
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeP()});
+renderInicio();
+</script>
+</body>
+</html>
